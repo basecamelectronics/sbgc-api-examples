@@ -4,7 +4,7 @@ SimpleBGC Serial API examples and libraries
 This folders contains SBGC library and example sketches for Arduino, 
 that shows how to control SimpleBGC-driven gimbal via Serial API.
 
-API specs are available at the http://www.basecamelectronics.com/downloads/32bit/
+API specs are available at the http://www.basecamelectronics.com/serialapi/
 
 
 Contents:

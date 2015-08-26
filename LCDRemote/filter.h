@@ -1,6 +1,6 @@
 /*
 This is a part of examples of usage of SimpleBGC Serial API.
-API specs are available at http://www.basecamelectronics.com/
+API specs are available at http://www.basecamelectronics.com/serialapi/
 
 Copyright (c) 2014 Aleksei Moskalenko
 */
@@ -26,6 +26,8 @@ typedef struct {
 	uint8_t trigger_state; // de-bounced state
 } btn_state_t;
 
+
+uint8_t debounce_button(btn_state_t &btn, uint8_t new_state);
 
 
 class avg_var16 {

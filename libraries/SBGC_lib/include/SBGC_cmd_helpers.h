@@ -1,3 +1,13 @@
+/*
+	SimpleBGC Serial API  library - helpers to pack and parse command data
+	More info: http://www.basecamelectronics.com/serialapi/
+
+  Copyright (c) 2014-2015 Aleksei Moskalenko
+  All rights reserved.
+	
+	See license info in the SBGC.h
+*/
+
 #ifndef __SBGC_CMD_HELPERS__
 #define __SBGC_CMD_HELPERS__
 

@@ -1,12 +1,9 @@
 /* 
 	SimpleBGC Serial API  library - definition of commands
-	More info: http://www.basecamelectronics.com
-
-  * last edit date: 18.10.2014
-  * compatible with the revision 2.4 of Serial API specification.
+	More info: http://www.basecamelectronics.com/serialapi/
 
 
-	Copyright (c) 2014 Aleksei Moskalenko
+	Copyright (c) 2014-2015 Aleksei Moskalenko
 	All rights reserved.
 	
 	See license info in the SBGC.h

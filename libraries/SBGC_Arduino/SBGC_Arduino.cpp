@@ -1,7 +1,7 @@
 /******************************************************************************
   This library is used by Arduino examples that show 
   how to control SimpleBGC-driven gimbal via Serial API.
-  API specs are available at http://www.basecamelectronics.com/
+  API specs are available at http://www.basecamelectronics.com/serialapi/
 
   Copyright (c) 2014-2015 Aleksey Moskalenko
 *******************************************************************************/

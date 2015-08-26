@@ -1,9 +1,6 @@
 /* 
-	SimpleBGC Serial API  library - message pack/unpack helpers
-	More info: http://www.basecamelectronics.com
-
-  * last edit date: 19.08.2015
-  * compatible with the revision 2.4, 2.5 of Serial API specification.
+	SimpleBGC Serial API  library - helpers to pack and parse command data
+	More info: http://www.basecamelectronics.com/serialapi/
 
 	Copyright (c) 2014-2015 Aleksei Moskalenko
 	All rights reserved.

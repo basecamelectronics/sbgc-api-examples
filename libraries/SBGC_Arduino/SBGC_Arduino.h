@@ -1,11 +1,11 @@
 /******************************************************************************
 This library is used by Arduino examples that show 
 how to control SimpleBGC-driven gimbal via Serial API.
-API specs are available at http://www.basecamelectronics.com/
+API specs are available at http://www.basecamelectronics.com/serialapi/
   
 Place SBGC libraries to you Arduino IDE 'libraries' location.
   
-!!!WARNING!!! Its recommended to increase the serial buffer size to 255 in the Arduino IDE, 
+!!!WARNING!!! Its recommended to increase the serial buffer size to 150 or more in the Arduino IDE, 
 (default buffer 64 bytes is not enough to fit incoming SBGC API commands)
 
 Copyright (c) 2014-2015 Aleksey Moskalenko

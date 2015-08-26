@@ -1,7 +1,7 @@
 /******************************************************************************
 	This is example sketch for Arduino.
 	Shows how to control SimpleBGC-driven gimbal via Serial API.
-	API specs are available at http://www.basecamelectronics.com/
+	API specs are available at http://www.basecamelectronics.com/serialapi/
 
 	Demo:  control camera angles by Serial API direct control and by
 	emulating various RC input methods;

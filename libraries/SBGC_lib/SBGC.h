@@ -1,8 +1,7 @@
 /* 
 	SimpleBGC Serial API  library
-	More info: http://www.basecamelectronics.com
+	More info: http://www.basecamelectronics.com/serialapi/
 
-  * last edit date: 19.08.2015
   * compatible with the revision 2.4, 2.5 of Serial API specification.
 
 	Copyright (c) 2014-2015 Aleksei Moskalenko

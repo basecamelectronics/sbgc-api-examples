@@ -1,7 +1,7 @@
 /******************************************************************************
 This is example sketch for Arduino, that
 shows how to control SimpleBGC-driven gimbal via Serial API.
-API specs are available at http://www.basecamelectronics.com/
+API specs are available at http://www.basecamelectronics.com/serialapi/
   
 Demo: This is a skeleton for LCD-enabled remote controller for SBGC32-powered gimbal.
 Tested with the Arduino UNO and Arduino 1.0 IDE.
@@ -20,6 +20,7 @@ Basic functions:
  - Use analog joystick to control PITCH and YAW axis (passed to SBGC controller as regular RC channels)
 	- joystick push-button acts as "Menu" button
  
+ - Navigation "select" button turns motors ON/OFF
 
 Arduino hardware:  
 	- Arduino UNO
@@ -69,13 +70,20 @@ Copyright (c) 2014-2015 Aleksei Moskalenko
 #define JOY_X_ANALOG_PIN 1  // joystick X-axis input
 #define JOY_Y_ANALOG_PIN 2  // joystick Y-axis input
 #define JOY_BTN_PIN		11  // joystick button input
+#define LCD_RS_PIN    8
+#define LCD_ENABLE_PIN 9
+#define LCD_D4_PIN 4
+#define LCD_D5_PIN 5
+#define LCD_D6_PIN 6
+#define LCD_D7_PIN 7
 /************************************************************************************
 * Serial wireless connection. Remove (comment) definitions in this block if  you want only wire connection.
 *************************************************************************************/
 #define BLUETOOTH_RN42 // RN-42 is supported to work as a master. Implement bt_master_connect() for your own module.
 #define BLUETOOTH_CLIENT_MAC_ADDR "201502280691" // the MAC address of a client to connect (12 hex digits)
+#define BLUETOOTH_CLIENT_PIN "0000" // PIN code set for connection
 #define BLUETOOTH_BAUD 115200
-//#define BLUETOOTH_FORCE_MASTER  // configure BT module as master role. May be done only once.
+#define BLUETOOTH_DO_SETUP  // configure BT module as master role and set PIN. May be done only once.
 /*************************************************************************************
 * Timings Configuration
 *************************************************************************************/
@@ -135,12 +143,11 @@ inline uint8_t read_nav_buttons_state();
 inline void update_display();
 void set_connected();
 void request_adj_vars_val();
-uint8_t debounce_button(btn_state_t &btn, uint8_t new_state);
 void set_local_adj_var(uint8_t id, int32_t val);
 inline void bt_master_connect();
 
 // Global variables
-static LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
+static LiquidCrystal lcd(LCD_RS_PIN, LCD_ENABLE_PIN, LCD_D4_PIN, LCD_D5_PIN, LCD_D6_PIN, LCD_D7_PIN);
 static uint8_t cur_adj_var_idx = 0;
 static SBGC_cmd_realtime_data_t rt_data;
 static uint16_t cur_time_ms, low_rate_time_ms, last_cmd_time_ms, rt_req_last_time_ms, joy_last_time_ms;
@@ -559,6 +566,7 @@ void lcd_debug_msg(char *str, uint8_t raw=1) {
 
 // Read and display AT cmd answer from BT module
 void _bt_read_answer() {
+  delay(100);
   char buf[20];
 	if(uint8_t size = serial.readBytesUntil('\r', buf, sizeof(buf)-1)) {
 		buf[size] = '\0';
@@ -575,30 +583,28 @@ void _bt_read_answer() {
 void bt_master_connect() {
 #ifdef BLUETOOTH_RN42
 
-  lcd_debug_msg("BLUETOOTH SETUP", 0);
+  lcd_debug_msg("BLUETOOTH INIT", 0);
   
   // set baud rate as set in the BT module
   serial.begin(BLUETOOTH_BAUD);
   delay(500); // let module to start
   serial.print("$$$"); // start command mode
-  delay(100);
   _bt_read_answer();
 	
 	
-#ifdef BLUETOOTH_FORCE_MASTER
+#ifdef BLUETOOTH_DO_SETUP
   serial.println("SM,1");   // set to master mode
-  delay(100);
+  _bt_read_answer();
+  serial.print("SP,"); // set PIN-code
+  serial.println(BLUETOOTH_CLIENT_PIN);
   _bt_read_answer();
   lcd_debug_msg("REBOOT..");
   serial.println("R,1");   // reboot to apply changes
-  delay(100);
   _bt_read_answer();
   delay(1000);
   serial.print("$$$"); // command mode again
-  delay(100);
   _bt_read_answer();
 #endif  
-  
   
   // Connect to specified device and switch to fast data mode
   lcd_debug_msg("START CONNECTION..");
