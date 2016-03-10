@@ -132,14 +132,10 @@
 #define SBGC_MENU_LEVEL_ROLL_PITCH 34
 #define SBGC_MENU_CENTER_YAW 35
 #define SBGC_MENU_UNTWIST_CABLES 36
+#define SBGC_MENU_SET_ANGLE_NO_SAVE 37
+#define SBGC_MENU_HOME_POSITION_SHORTEST 38
+#define SBGC_MENU_CENTER_YAW_SHORTEST 39
 
-
-// Control modes
-#define SBGC_CONTROL_MODE_NO          0
-#define SBGC_CONTROL_MODE_SPEED       1
-#define SBGC_CONTROL_MODE_ANGLE       2
-#define SBGC_CONTROL_MODE_SPEED_ANGLE 3
-#define SBGC_CONTROL_MODE_RC          4
 
 // Control modes
 #define SBGC_CONTROL_MODE_NO          0
@@ -149,6 +145,9 @@
 #define SBGC_CONTROL_MODE_RC          4
 #define SBGC_CONTROL_MODE_ANGLE_REL_FRAME 5
 
+#define SBGC_CONTROL_MODE_MASK 0x0F // bits0..3 used for mode, other for flags
+
+#define SBGC_CONTROL_MODE_FLAG_UNTWIST (1<<7)
 
 
 #endif //__SBGC__
