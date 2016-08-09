@@ -56,7 +56,7 @@ void SBGC_cmd_api_virt_ch_control_pack(SBGC_cmd_api_virt_ch_control_t &p, Serial
 		cmd.len = sizeof(p);
 	#else
 		for(uint8_t i=0; i<SBGC_API_VIRT_NUM_CHANNELS; i++) {
-			cmd.writeByte(p.data[i]);
+			cmd.writeWord(p.data[i]);
 		}
 	#endif
 }

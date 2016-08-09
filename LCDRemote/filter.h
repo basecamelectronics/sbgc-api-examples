@@ -44,7 +44,7 @@ public:
 	}
 
 	inline void average(int16_t data) {
-		buf+= (int16_t)(data - res);
+		buf+= (int32_t)data - (int32_t)res;
 		res = (int16_t)(buf >> factor);
 	}
 };
