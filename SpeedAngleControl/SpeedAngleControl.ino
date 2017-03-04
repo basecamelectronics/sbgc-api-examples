@@ -28,7 +28,8 @@
 
 /*****************************************************************************/
 
-HardwareSerial &serial = Serial;
+// Set serial port where SBGC32 is connected
+#define serial Serial
 
 void setup() {
 	serial.begin(SERIAL_SPEED);

@@ -62,7 +62,9 @@
 #define BTN_STATE_RELEASED  0
 #define BTN_STATE_PRESSED  1
 
-static HardwareSerial &serial = Serial;
+// Set serial port where SBGC32 is connected
+#define serial Serial
+
 static SBGC_cmd_control_t c = { 0, 0, 0, 0, 0, 0, 0 };
 static SBGC_cmd_servo_out_t cmd_servo_out = { { SBGC_SERVO_OUT_DISABLED, SBGC_SERVO_OUT_DISABLED, SBGC_SERVO_OUT_DISABLED, SBGC_SERVO_OUT_DISABLED, SBGC_SERVO_OUT_DISABLED, SBGC_SERVO_OUT_DISABLED, SBGC_SERVO_OUT_DISABLED, SBGC_SERVO_OUT_DISABLED } };
 static btn_state_t menu_btn, rec_btn;

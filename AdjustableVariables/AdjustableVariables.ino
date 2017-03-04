@@ -22,7 +22,8 @@
 // Serial baud rate should match with the rate, configured for the SimpleBGC controller
 #define SERIAL_SPEED 115200
 
-HardwareSerial &serial = Serial;
+// Set serial port where SBGC32 is connected
+#define serial Serial
 
 
 void setup() {

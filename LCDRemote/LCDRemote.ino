@@ -79,16 +79,30 @@ Copyright (c) 2014-2015 Aleksei Moskalenko
 /************************************************************************************
 * Serial wireless connection. Remove (comment) definitions in this block if  you want only wire connection.
 *************************************************************************************/
-#define BLUETOOTH_RN42 // RN-42 is supported to work as a master. Implement bt_master_connect() for your own module.
-#define BLUETOOTH_CLIENT_MAC_ADDR "201502280691" // the MAC address of a client to connect (12 hex digits)
-#define BLUETOOTH_CLIENT_PIN "0000" // PIN code set for connection
+#define BLUETOOTH_CONNECTION
+// Choose  (uncomment) one of the  supported modules, or implement bt_master_connect() for your own module.
+//#define BLUETOOTH_RN42 // RN-42. 
+#define BLUETOOTH_HM10 // HM-10, HM-11 (BLE). Implement bt_master_connect() for your own module.
+//#define BLUETOOTH_CLIENT_MAC_ADDR "201502280691" // If defined, use this MAC address to connect (12 hex digits), instead of searching
+#define BLUETOOTH_CLIENT_NAME_PATTERN "SBGC"  // If defined, will search for a device containing this pattern in its name
+#define BLUETOOTH_CLIENT_PIN "000000" // PIN code set for connection
 #define BLUETOOTH_BAUD 115200
 #define BLUETOOTH_DO_SETUP  // configure BT module as master role and set PIN. May be done only once.
+#define BLUETOOTH_BUF_SIZE 60 // size of buffer for answers from module
+#define BLUETOOTH_DEBUG false // set to true to display answers from BT module
+#if(defined(BLUETOOTH_HM10)) 
+	#define BLE_MODE  // BLE requires special mode: 20-byte packets with pause between them. Tx is not yet implemented in this example
+#endif
 /*************************************************************************************
 * Timings Configuration
 *************************************************************************************/
-#define REALTIME_DATA_REQUEST_INTERAL_MS 100 // interval between reatime data requests
-#define JOYSTICK_CMD_SEND_INTERVAL_MS 50     // interval of sending joystick control commands
+#ifdef BLE_MODE
+	#define REALTIME_DATA_REQUEST_INTERAL_MS 500 // interval between reatime data requests
+	#define JOYSTICK_CMD_SEND_INTERVAL_MS 50     // interval of sending joystick control commands
+#else
+	#define REALTIME_DATA_REQUEST_INTERAL_MS 100 // interval between reatime data requests
+	#define JOYSTICK_CMD_SEND_INTERVAL_MS 50     // interval of sending joystick control commands
+#endif
 #define MAX_WAIT_TIME_MS 2000  // time to wait for incoming commands to be in CONNECTED state
 #define LOW_RATE_TASK_INTERVAL 500  // interval between low-priority tasks (display update, etc)
 #define BTN_BOUNCE_THRESHOLD_MS 30  // interval for button de-bouncer threshold
@@ -150,7 +164,7 @@ inline void bt_master_connect();
 static LiquidCrystal lcd(LCD_RS_PIN, LCD_ENABLE_PIN, LCD_D4_PIN, LCD_D5_PIN, LCD_D6_PIN, LCD_D7_PIN);
 static uint8_t cur_adj_var_idx = 0;
 static SBGC_cmd_realtime_data_t rt_data;
-static uint16_t cur_time_ms, low_rate_time_ms, last_cmd_time_ms, rt_req_last_time_ms, joy_last_time_ms;
+static uint16_t cur_time_ms, low_rate_time_ms, last_cmd_time_ms, rt_req_last_time_ms, joy_last_time_ms; //last_bt_connect_ms;
 static uint8_t is_connected = 0;
 static avg_var16 target_error_avg;
 static btn_state_t nav_btn, joy_btn;
@@ -169,7 +183,8 @@ static uint8_t need_update_display;
 	#include <SoftwareSerial.h>
 	SoftwareSerial serial(SOFTWARE_SERIAL_RX_PIN, SOFTWARE_SERIAL_TX_PIN);
 #else
-	HardwareSerial &serial = Serial;
+	// Set serial port where SBGC32 is connected
+	#define serial Serial
 #endif
 
 
@@ -217,7 +232,15 @@ void loop() {
 	////////// Request realtime data with the fixed rate
 	if((cur_time_ms - rt_req_last_time_ms) > REALTIME_DATA_REQUEST_INTERAL_MS) {
 		SerialCommand cmd;
-		cmd.init(SBGC_CMD_REALTIME_DATA_4);
+		if(is_connected) {
+			cmd.init(SBGC_CMD_REALTIME_DATA_4);
+		} else { // Set version request to init connection
+			cmd.init(SBGC_CMD_BOARD_INFO);
+#ifdef BLE_MODE
+			cmd.writeWord(10); // pause between packets, ms
+#endif
+		}
+			
 		sbgc_parser.send_cmd(cmd, 0);
 		
 		rt_req_last_time_ms = cur_time_ms;
@@ -307,6 +330,13 @@ void loop() {
 		need_update_display = 0;
 	}
 	
+	// Try to restore BT connection
+	/*
+	if(!is_connected && (cur_time_ms - last_bt_connect_ms) > MAX_WAIT_TIME_MS*2) {
+		bt_master_connect();
+	}
+	*/
+	
 
 	
 	free_memory = freeMemory();
@@ -370,6 +400,7 @@ void process_in_queue() {
 	// If no commands for a long time, set connected state to false
 	if(is_connected && (uint16_t)(cur_time_ms - last_cmd_time_ms) > MAX_WAIT_TIME_MS) {
 		is_connected = 0;
+		//last_bt_connect_ms = cur_time_ms;
 	}
 }
 
@@ -564,53 +595,144 @@ void lcd_debug_msg(char *str, uint8_t raw=1) {
 }
 	
 
-// Read and display AT cmd answer from BT module
-void _bt_read_answer() {
-  delay(100);
-  char buf[20];
-	if(uint8_t size = serial.readBytesUntil('\r', buf, sizeof(buf)-1)) {
-		buf[size] = '\0';
-		lcd_debug_msg(buf);
+// Reads answer to buf[] sized 'buf_size' bytes as string.
+// Display answer on LCD.
+// Returns actualy read size.
+uint8_t _bt_read_answer(char *buf, uint16_t timeout_ms=500, bool debug=BLUETOOTH_DEBUG) {
+	serial.setTimeout(timeout_ms); // wait 200 ms for each answer to be accomplished  
+	uint8_t size;
+	
+#if(defined(BLUETOOTH_RN42))
+  size = serial.readBytesUntil('\r', buf, (BLUETOOTH_BUF_SIZE-1));
+#elif(defined(BLUETOOTH_HM10)) 
+  size = serial.readBytes(buf, (BLUETOOTH_BUF_SIZE-1));
+#else
+  #error "Define serial.read() for bluetooth!"
+#endif
+
+	buf[size] = '\0';
+	if(size) {
+		if(debug) lcd_debug_msg(buf);
 	} else {
-		lcd_debug_msg("NO ANSWER");
-		delay(1000);
+		if(debug) {
+			lcd_debug_msg("NO ANSWER");
+			delay(1000);
+		}
 	}
+	
+	serial.setTimeout(1000); // return default value
+	
+	return size;
 }
+
 
 /* 
 * Initiates wireless connection. Leave it empty for wire connection.
 */
 void bt_master_connect() {
-#ifdef BLUETOOTH_RN42
+#ifdef BLUETOOTH_CONNECTION
 
-  lcd_debug_msg("BLUETOOTH INIT", 0);
-  
+  char buf[BLUETOOTH_BUF_SIZE];
+  lcd_debug_msg("BLUETOOTH INIT...", 0);
   // set baud rate as set in the BT module
   serial.begin(BLUETOOTH_BAUD);
   delay(500); // let module to start
+
+
+#if(defined(BLUETOOTH_RN42))
   serial.print("$$$"); // start command mode
-  _bt_read_answer();
+  _bt_read_answer(buf);
 	
 	
 #ifdef BLUETOOTH_DO_SETUP
   serial.println("SM,1");   // set to master mode
-  _bt_read_answer();
+  _bt_read_answer(buf);
   serial.print("SP,"); // set PIN-code
   serial.println(BLUETOOTH_CLIENT_PIN);
-  _bt_read_answer();
+  _bt_read_answer(buf);
   lcd_debug_msg("REBOOT..");
   serial.println("R,1");   // reboot to apply changes
-  _bt_read_answer();
+  _bt_read_answer(buf);
   delay(1000);
   serial.print("$$$"); // command mode again
-  _bt_read_answer();
-#endif  
+  _bt_read_answer(buf);
+#endif // BLUETOOTH_DO_SETUP
   
   // Connect to specified device and switch to fast data mode
   lcd_debug_msg("START CONNECTION..");
   serial.print("CF");
   serial.println(BLUETOOTH_CLIENT_MAC_ADDR);
-  delay(3000);
+
+
+#elif(defined(BLUETOOTH_HM10)) 
+
+#ifdef BLUETOOTH_DO_SETUP
+  serial.print("AT+VERS?"); 
+  _bt_read_answer(buf);
+  serial.print("AT+IMME1"); // set AT mode at boot 
+  _bt_read_answer(buf);
+  serial.print("AT+ROLE1"); // set "master" mode
+  _bt_read_answer(buf);
+	serial.print("AT+MODE0"); // set "data transmission mode"
+  _bt_read_answer(buf);	
+  sprintf(buf, "AT+PASS%s", BLUETOOTH_CLIENT_PIN);
+  serial.print(buf); // set PIN-code
+  _bt_read_answer(buf);	
+#endif  // BLUETOOTH_DO_SETUP
+
+#ifdef BLUETOOTH_CLIENT_MAC_ADDR
+  // Connect to specified device and switch to fast data mode
+  lcd_debug_msg("START CONNECTION..");
+  serial.print("AT+CON");
+  serial.print(BLUETOOTH_CLIENT_MAC_ADDR);
+  _bt_read_answer(buf);
+#else
+  // Search BLE module by name
+  lcd_debug_msg("SEARCHING...", 0);
+  serial.print("AT+SHOW1"); // set showing the name os discovered device
+  _bt_read_answer(buf);
+  serial.print("AT+DISC?");
+
+  uint8_t device_idx = 0;
+  int8_t found_idx = -1;
+  for(uint8_t i=0; i<100; i++) {  // wait 20 seconds
+  	if(uint8_t size = _bt_read_answer(buf, 100, false)) { // wait answer 100 ms, skip debugging
+	  	if(strstr(buf, "OK+DISCE") != NULL) break; // finished discovery
+	
+	  	if(char *name_str = strstr(buf, "OK+NAME:")) {
+	  		// We found a device, display its name
+	  		lcd_debug_msg(&name_str[8]);
+	  		if(BLUETOOTH_DEBUG) delay(500);
+	  		
+	  		if(strstr(&name_str[8], BLUETOOTH_CLIENT_NAME_PATTERN) != NULL) {
+	  			found_idx = device_idx;
+		  	}
+		  	
+		  	device_idx++;
+	  	}
+	  }
+  }
   
-#endif
+  if(found_idx >= 0) {
+		lcd_debug_msg("CONNECTING BT..", 0);
+	  // connect using array index
+	  sprintf(buf, "AT+CONN%d", found_idx);
+	  serial.print(buf); 
+	  _bt_read_answer(buf);
+  } else {
+  	lcd_debug_msg("NO DEVICE FOUND", 0);
+  }
+  	
+  
+#endif // BLUETOOTH_CLIENT_MAC_ADDR
+    
+  
+#endif // ..BLUETOOTH TYPE..
+
+	delay(3000);
+
+	//last_bt_connect_ms = millis();
+
+
+#endif // BLUETOOTH_CONNECTION
 }
