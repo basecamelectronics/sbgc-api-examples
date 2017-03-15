@@ -82,11 +82,12 @@ Copyright (c) 2014-2015 Aleksei Moskalenko
 #define BLUETOOTH_CONNECTION
 // Choose  (uncomment) one of the  supported modules, or implement bt_master_connect() for your own module.
 //#define BLUETOOTH_RN42 // RN-42. 
-#define BLUETOOTH_HM10 // HM-10, HM-11 (BLE). Implement bt_master_connect() for your own module.
-//#define BLUETOOTH_CLIENT_MAC_ADDR "201502280691" // If defined, use this MAC address to connect (12 hex digits), instead of searching
-#define BLUETOOTH_CLIENT_NAME_PATTERN "SBGC"  // If defined, will search for a device containing this pattern in its name
-#define BLUETOOTH_CLIENT_PIN "000000" // PIN code set for connection
-#define BLUETOOTH_BAUD 115200
+//#define BLUETOOTH_HM10 // HM-10, HM-11 (BLE). Implement bt_master_connect() for your own module.
+#define BLUETOOTH_HC05 // Be sure to use HC-05 module with KEY pin. This pin shuld be pulled to 3.3V
+#define BLUETOOTH_CLIENT_MAC_ADDR "98D3,34,90DB5E" // If defined, use this MAC address to connect (12 hex digits), instead of searching | If HC-05 is used write MAC address in following format: "XXXX,XX,XXXXXX"
+//#define BLUETOOTH_CLIENT_NAME_PATTERN "SBGC"  // If defined, will search for a device containing this pattern in its name
+#define BLUETOOTH_CLIENT_PIN "1234" // PIN code set for connection
+#define BLUETOOTH_BAUD 38400
 #define BLUETOOTH_DO_SETUP  // configure BT module as master role and set PIN. May be done only once.
 #define BLUETOOTH_BUF_SIZE 60 // size of buffer for answers from module
 #define BLUETOOTH_DEBUG false // set to true to display answers from BT module
@@ -606,6 +607,8 @@ uint8_t _bt_read_answer(char *buf, uint16_t timeout_ms=500, bool debug=BLUETOOTH
   size = serial.readBytesUntil('\r', buf, (BLUETOOTH_BUF_SIZE-1));
 #elif(defined(BLUETOOTH_HM10)) 
   size = serial.readBytes(buf, (BLUETOOTH_BUF_SIZE-1));
+#elif(defined(BLUETOOTH_HC05))
+  size = serial.readBytesUntil('\r', buf, (BLUETOOTH_BUF_SIZE - 1));
 #else
   #error "Define serial.read() for bluetooth!"
 #endif
@@ -725,7 +728,27 @@ void bt_master_connect() {
   	
   
 #endif // BLUETOOTH_CLIENT_MAC_ADDR
-    
+
+#elif(defined(BLUETOOTH_HC05))
+
+#ifdef BLUETOOTH_DO_SETUP
+
+  serial.println("AT+RMAAD"); //Clear paired devices
+  _bt_read_answer(buf);
+  sprintf(buf, "AT+PSWD=%s", BLUETOOTH_CLIENT_PIN); // set PIN (both master and slave should have the same PIN)
+  serial.println(buf);
+  _bt_read_answer(buf);
+  serial.println("AT+ROLE=1"); //set 'master' mode
+  _bt_read_answer(buf);
+  serial.println("AT+CMODE=0"); //connect only to fixed MAC address
+  _bt_read_answer(buf);
+  serial.println("AT+INIT"); //Initialize 'SPP'
+  _bt_read_answer(buf);
+  sprintf(buf, "AT+LINK=%s", BLUETOOTH_CLIENT_MAC_ADDR); // connect to slave HC05, MAC address should be in following format: "XXXX,XX,XXXXXX" ("98D3,34,90DB5E")
+  serial.println(buf);
+  _bt_read_answer(buf);
+
+#endif  // BLUETOOTH_DO_SETUP
   
 #endif // ..BLUETOOTH TYPE..
 
