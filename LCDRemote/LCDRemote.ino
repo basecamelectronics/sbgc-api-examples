@@ -83,7 +83,7 @@ Copyright (c) 2014-2015 Aleksei Moskalenko
 // Choose  (uncomment) one of the  supported modules, or implement bt_master_connect() for your own module.
 //#define BLUETOOTH_RN42 // RN-42. 
 //#define BLUETOOTH_HM10 // HM-10, HM-11 (BLE). Implement bt_master_connect() for your own module.
-#define BLUETOOTH_HC05 // Be sure to use HC-05 module with KEY pin. This pin shuld be pulled to 3.3V
+#define BLUETOOTH_HC05 // Be sure to use HC-05 module with KEY pin. This pin shuld be pulled to 3.3V  Note:It will not work with new HC-05 that comes with firmware version 3.0-20170601
 #define BLUETOOTH_CLIENT_MAC_ADDR "98D3,34,90DB5E" // If defined, use this MAC address to connect (12 hex digits), instead of searching | If HC-05 is used write MAC address in following format: "XXXX,XX,XXXXXX"
 //#define BLUETOOTH_CLIENT_NAME_PATTERN "SBGC"  // If defined, will search for a device containing this pattern in its name
 #define BLUETOOTH_CLIENT_PIN "1234" // PIN code set for connection
