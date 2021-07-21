@@ -31,7 +31,7 @@
 	ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/   
+*/
 
 #ifndef  __SBGC__
 #define  __SBGC__
@@ -46,7 +46,7 @@
 
 // Optimize commapnd packing if it's good aligned in the memory
 #if(defined(SYS_LITTLE_ENDIAN) && defined(SYS_STRUCT_PACKED))
-	#define SBGC_CMD_STRUCT_ALIGNED
+#define SBGC_CMD_STRUCT_ALIGNED
 #endif
 
 
@@ -147,6 +147,7 @@
 
 #define SBGC_CONTROL_MODE_MASK 0x0F // bits0..3 used for mode, other for flags
 
+#define SBGC_CONTROL_FLAG_AUTO_TASK (1<<6)
 #define SBGC_CONTROL_MODE_FLAG_UNTWIST (1<<7)
 
 

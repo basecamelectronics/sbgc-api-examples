@@ -7,7 +7,7 @@
 	All rights reserved.
 	
 	See license info in the SBGC.h
-*/   
+*/
 
 #ifndef  __SBGC_command__
 #define  __SBGC_command__
@@ -103,6 +103,23 @@
 #define SBGC_CMD_DEBUG_VARS_3  254
 #define SBGC_CMD_ERROR  255
 
+#define SBGC_CMD_DATA_STREAM_INTERVAL 85
+#define SBGC_CMD_REALTIME_DATA_CUSTOM 88
+
+constexpr uint32_t
+cmd_realtime_data_custom_flags_imu_angles = 1 << 0,
+        cmd_realtime_data_custom_flags_target_angles = 1 << 1,
+        cmd_realtime_data_custom_flags_target_speed = 1 << 2,
+        cmd_realtime_data_custom_flags_stator_rotor_angle = 1 << 3,
+        cmd_realtime_data_custom_flags_gyro_data = 1 << 4,
+        cmd_realtime_data_custom_flags_rc_data = 1 << 5,
+        cmd_realtime_data_custom_flags_z_vector_h_vector = 1 << 6,
+        cmd_realtime_data_custom_flags_rc_channels = 1 << 8,
+        cmd_realtime_data_custom_flags_acc_data = 1 << 9,
+        cmd_realtime_data_custom_flags_motor4_control = 1 << 10,
+        cmd_realtime_data_custom_flags_ahrs_debug_info = 1 << 11,
+        cmd_realtime_data_custom_flags_encoder_raw24 = 1 << 12,
+        cmd_realtime_data_custom_flags_imu_angles_rad = 1 << 13;
 
 
 #endif //__SBGC_command__
